@@ -814,6 +814,10 @@ class LoadedModel:
             return self.model_memory()
 
     def model_load(self, lowvram_model_memory=0, force_patch_weights=False):
+        loaded_size = self.model.loaded_size()
+        if loaded_size < self.model.model_size():
+            synchronize()  # keep previously queued work out of the measured load time
+        start = time.perf_counter()
         self.model.model_patches_to(self.device)
         self.model.model_patches_to(self.model.model_dtype())
 
@@ -821,8 +825,6 @@ class LoadedModel:
         use_more_vram = lowvram_model_memory
         if use_more_vram == 0:
             use_more_vram = 1e32
-        loaded_size = self.model.loaded_size()
-        start = time.perf_counter()
         self.model_use_more_vram(use_more_vram, force_patch_weights=force_patch_weights)
 
         real_model = self.model.model
